@@ -217,6 +217,32 @@ function addTask() {
   showToast(`✅ Task added to ${COL_MAP[col].label}`);
 }
 
+function addInlineTask(colId) {
+  const input = document.getElementById(`inline-input-${colId}`);
+  if (!input) return;
+  const text = input.value.trim();
+  if (!text) { input.focus(); return; }
+
+  const task = {
+    id: generateId(),
+    text,
+    column: colId,
+    context: state.context,
+    starred: false,
+    createdAt: Date.now(),
+    doneAt: null,
+  };
+
+  state.tasks.unshift(task);
+  input.value = '';
+  input.focus();
+  saveState();
+  renderColumns();
+  // Re-focus the same column's input after re-render
+  const newInput = document.getElementById(`inline-input-${colId}`);
+  if (newInput) newInput.focus();
+}
+
 function deleteTask(id) {
   state.tasks = state.tasks.filter(t => t.id !== id);
   saveState();
@@ -261,7 +287,7 @@ function renderColumns() {
     card.dataset.col = col.id;
 
     card.innerHTML = `
-      <div class="col-header" style="background: ${col.color}22; color: ${col.color}; border-bottom: 1px solid ${col.color}44;">
+      <div class="col-header" style="background: ${col.color}22; color: ${col.color}; border-bottom: 1px solid ${col.color}44; border-radius: var(--radius) var(--radius) 0 0;">
         <span>${col.emoji} ${col.label}</span>
         <span class="badge" style="background:${col.color}33;">${tasks.length}</span>
       </div>
@@ -270,6 +296,12 @@ function renderColumns() {
            ondrop="onDrop(event,'${col.id}')"
            ondragleave="onDragLeave(event)">
         ${tasks.length === 0 ? `<div class="empty-col">Drop tasks here</div>` : ''}
+      </div>
+      <div class="inline-add-row">
+        <input class="inline-add-input" id="inline-input-${col.id}"
+               placeholder="+ Add task here…"
+               onkeydown="if(event.key==='Enter')addInlineTask('${col.id}')" />
+        <button class="inline-add-btn" onclick="addInlineTask('${col.id}')" title="Add">+</button>
       </div>
     `;
 
@@ -310,11 +342,11 @@ function buildTaskEl(task) {
   div.innerHTML = `
     <span class="task-text">${escapeHtml(task.text)}</span>
     <div class="task-actions">
-      <button class="btn-icon${task.starred ? ' active' : ''}" title="Star" onclick="toggleStar('${task.id}')">
+      <button class="btn-icon btn-star${task.starred ? ' active' : ''}" title="${task.starred ? 'Unstar' : 'Star'}" onclick="toggleStar('${task.id}')">
         ${task.starred ? '⭐' : '☆'}
       </button>
-      <button class="btn-icon" title="Move to…" onclick="toggleMoveMenu(event,'${task.id}')">⇄</button>
-      <button class="btn-icon" title="Delete" onclick="deleteTask('${task.id}')">🗑️</button>
+      <button class="btn-icon btn-move" title="Move to…" onclick="toggleMoveMenu(event,'${task.id}')">⇄ Move</button>
+      <button class="btn-icon btn-delete" title="Delete" onclick="deleteTask('${task.id}')">✕</button>
     </div>
     <div class="move-select" id="move-menu-${task.id}">
       ${moveOptionsHtml}
@@ -372,12 +404,22 @@ function toggleMoveMenu(event, taskId) {
   const menu = document.getElementById(`move-menu-${taskId}`);
   if (!menu) return;
 
-  if (openMoveMenu && openMoveMenu !== menu) {
-    openMoveMenu.classList.remove('open');
-  }
+  const isOpen = menu.classList.contains('open');
+  closeAllMoveMenus();
+  if (isOpen) return;
 
-  menu.classList.toggle('open');
-  openMoveMenu = menu.classList.contains('open') ? menu : null;
+  // Position the menu using fixed coords relative to the button
+  const btn = event.currentTarget;
+  const rect = btn.getBoundingClientRect();
+  const menuWidth = 175;
+  const spaceRight = window.innerWidth - rect.right;
+  const left = spaceRight >= menuWidth ? rect.left : rect.right - menuWidth;
+  const top = rect.bottom + 6;
+
+  menu.style.left = `${Math.max(8, left)}px`;
+  menu.style.top = `${top}px`;
+  menu.classList.add('open');
+  openMoveMenu = menu;
 }
 
 function closeAllMoveMenus() {
