@@ -3,472 +3,448 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-  <meta name="theme-color" content="#6366f1" />
+  <meta name="theme-color" content="#6c63ff" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>TaskFlow – Personal & Office Tasks</title>
+  <title>TaskFlow</title>
   <link rel="manifest" href="manifest.json" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
-  <!-- Google Sign-In -->
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <script src="https://accounts.google.com/gsi/client" async defer></script>
-  <style>
-    /* ─────────────────────────────────────────────
-       CSS VARIABLES & RESET
-    ───────────────────────────────────────────── */
-    :root {
-      --col-today:      #f97316;
-      --col-tomorrow:   #eab308;
-      --col-thisweek:   #22c55e;
-      --col-nextweek:   #06b6d4;
-      --col-thismonth:  #8b5cf6;
-      --col-nextmonth:  #ec4899;
-      --col-done:       #64748b;
-
-      --bg:          #0f0f1a;
-      --bg2:         #1a1a2e;
-      --bg3:         #16213e;
-      --surface:     #1e2040;
-      --surface2:    #252848;
-      --border:      rgba(255,255,255,0.07);
-      --text:        #e2e8f0;
-      --text-muted:  #94a3b8;
-      --accent:      #6366f1;
-      --accent2:     #818cf8;
-      --star:        #fbbf24;
-
-      --radius:      14px;
-      --radius-sm:   8px;
-      --shadow:      0 4px 24px rgba(0,0,0,0.4);
-      --font:        'Plus Jakarta Sans', sans-serif;
-      --font-mono:   'Space Mono', monospace;
-    }
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    html { font-size: 16px; scroll-behavior: smooth; }
-
-    body {
-      font-family: var(--font);
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-
-    /* Background mesh */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background:
-        radial-gradient(ellipse 80% 60% at 20% 10%, rgba(99,102,241,0.15) 0%, transparent 60%),
-        radial-gradient(ellipse 60% 50% at 80% 80%, rgba(236,72,153,0.10) 0%, transparent 60%);
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    /* ─────────────────────────────────────────────
-       LOGIN SCREEN
-    ───────────────────────────────────────────── */
-    #login-screen {
-      position: fixed; inset: 0; z-index: 1000;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      background: var(--bg);
-      gap: 2rem;
-    }
-
-    .login-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      padding: 3rem 2.5rem;
-      text-align: center;
-      max-width: 380px;
-      width: 90%;
-      box-shadow: var(--shadow), 0 0 80px rgba(99,102,241,0.12);
-    }
-
-    .login-logo {
-      font-size: 3rem; margin-bottom: 1rem;
-    }
-
-    .login-card h1 {
-      font-size: 1.8rem; font-weight: 800;
-      background: linear-gradient(135deg, #818cf8, #ec4899);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      margin-bottom: 0.4rem;
-    }
-
-    .login-card p {
-      color: var(--text-muted); font-size: 0.9rem; margin-bottom: 2rem;
-    }
-
-    .google-btn {
-      display: flex; align-items: center; justify-content: center; gap: 0.75rem;
-      background: white; color: #333; border: none;
-      padding: 0.8rem 1.8rem; border-radius: 50px;
-      font-size: 0.95rem; font-weight: 600; cursor: pointer;
-      width: 100%; transition: transform 0.2s, box-shadow 0.2s;
-      font-family: var(--font);
-    }
-
-    .google-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
-
-    .google-btn svg { width: 20px; height: 20px; }
-
-    /* ─────────────────────────────────────────────
-       MAIN APP
-    ───────────────────────────────────────────── */
-    #app { position: relative; z-index: 1; display: none; flex-direction: column; min-height: 100vh; }
-
-    /* Header */
-    header {
-      background: rgba(30,32,64,0.92);
-      backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--border);
-      padding: 0.45rem 1.2rem;
-      display: flex; align-items: center; gap: 0.75rem;
-      position: sticky; top: 0; z-index: 100;
-    }
-
-    .header-logo { font-size: 1.1rem; font-weight: 800; letter-spacing: -0.5px; }
-    .header-logo span { color: var(--accent2); }
-
-    .header-right { margin-left: auto; display: flex; align-items: center; gap: 0.75rem; }
-
-    .user-avatar {
-      width: 28px; height: 28px; border-radius: 50%;
-      border: 2px solid var(--accent);
-      object-fit: cover; cursor: pointer;
-    }
-
-    .user-name { font-size: 0.78rem; color: var(--text-muted); }
-
-    /* Context Tabs (Personal / Office) */
-    .context-tabs {
-      display: flex; gap: 0.5rem;
-      background: var(--bg2); border-radius: 50px;
-      padding: 4px;
-    }
-
-    .context-tab {
-      padding: 0.3rem 0.9rem; border-radius: 50px;
-      font-size: 0.78rem; font-weight: 600; border: none;
-      cursor: pointer; transition: all 0.2s;
-      color: var(--text-muted); background: transparent;
-      font-family: var(--font);
-    }
-
-    .context-tab.active {
-      background: var(--accent); color: white;
-      box-shadow: 0 2px 12px rgba(99,102,241,0.4);
-    }
-
-    /* Page Tabs (Tasks / History) */
-    .page-tabs {
-      display: flex; gap: 0; border-bottom: 1px solid var(--border);
-      padding: 0 1.5rem;
-      background: var(--bg2);
-    }
-
-    .page-tab {
-      padding: 0.75rem 1.5rem; font-size: 0.9rem; font-weight: 600;
-      border: none; background: transparent; color: var(--text-muted);
-      cursor: pointer; border-bottom: 2px solid transparent;
-      transition: all 0.2s; font-family: var(--font);
-      display: flex; align-items: center; gap: 0.4rem;
-    }
-
-    .page-tab.active { color: var(--accent2); border-bottom-color: var(--accent2); }
-
-    /* Main content */
-    main { padding: 1.5rem; flex: 1; }
-
-    /* Add Task Bar */
-    .add-bar {
-      display: flex; gap: 0.75rem; margin-bottom: 1.5rem;
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 0.75rem;
-      align-items: center;
-    }
-
-    .add-bar input {
-      flex: 1; background: transparent; border: none;
-      color: var(--text); font-size: 0.95rem; outline: none;
-      font-family: var(--font);
-    }
-
-    .add-bar input::placeholder { color: var(--text-muted); }
-
-    .col-select {
-      background: var(--bg3); border: 1px solid var(--border);
-      color: var(--text); padding: 0.4rem 0.75rem;
-      border-radius: var(--radius-sm); font-size: 0.85rem;
-      cursor: pointer; font-family: var(--font); outline: none;
-    }
-
-    .btn-add {
-      background: var(--accent); color: white; border: none;
-      padding: 0.5rem 1.2rem; border-radius: var(--radius-sm);
-      font-weight: 600; cursor: pointer; font-size: 0.9rem;
-      transition: all 0.2s; font-family: var(--font);
-    }
-
-    .btn-add:hover { background: var(--accent2); transform: translateY(-1px); }
-
-    /* Columns grid */
-    .columns-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap: 1rem;
-    }
-
-    /* Column card */
-    .column-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      overflow: visible;
-      min-height: 200px;
-      display: flex; flex-direction: column;
-    }
-
-    .col-header {
-      padding: 0.75rem 1rem;
-      font-weight: 700; font-size: 0.85rem; letter-spacing: 0.5px;
-      text-transform: uppercase; display: flex; align-items: center;
-      justify-content: space-between;
-    }
-
-    .col-header .badge {
-      background: rgba(0,0,0,0.2); border-radius: 50px;
-      padding: 0.1rem 0.5rem; font-size: 0.7rem; font-weight: 700;
-    }
-
-    .col-body { padding: 0.5rem; flex: 1; display: flex; flex-direction: column; gap: 0.4rem; }
-
-    .col-body.drag-over { background: rgba(99,102,241,0.08); border-radius: var(--radius-sm); }
-
-    /* Task card */
-    .task-card {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 0.6rem 0.75rem;
-      display: flex; align-items: center; gap: 0.5rem;
-      cursor: grab; transition: all 0.2s;
-      position: relative;
-    }
-
-    .task-card:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-    .task-card:active { cursor: grabbing; }
-    .task-card.dragging { opacity: 0.4; }
-
-    .task-card.starred { border-left: 3px solid var(--star); }
-
-    .task-text {
-      flex: 1; font-size: 0.88rem; line-height: 1.4;
-      word-break: break-word;
-    }
-
-    .task-actions {
-      display: flex; gap: 0.35rem; align-items: center; flex-shrink: 0;
-    }
-
-    .btn-icon {
-      border: none; cursor: pointer;
-      font-size: 0.78rem; line-height: 1; padding: 4px 6px;
-      border-radius: 6px; font-weight: 700;
-      transition: transform 0.15s, filter 0.15s;
-      display: flex; align-items: center; justify-content: center;
-    }
-
-    .btn-icon:hover { transform: scale(1.15); filter: brightness(1.2); }
-
-    /* Star button – amber */
-    .btn-icon.btn-star {
-      background: rgba(251,191,36,0.18);
-      color: #fbbf24;
-      border: 1px solid rgba(251,191,36,0.35);
-    }
-    .btn-icon.btn-star.active {
-      background: rgba(251,191,36,0.32);
-      border-color: #fbbf24;
-    }
-
-    /* Move button – indigo */
-    .btn-icon.btn-move {
-      background: rgba(99,102,241,0.18);
-      color: #a5b4fc;
-      border: 1px solid rgba(99,102,241,0.35);
-    }
-
-    /* Delete button – red */
-    .btn-icon.btn-delete {
-      background: rgba(239,68,68,0.15);
-      color: #f87171;
-      border: 1px solid rgba(239,68,68,0.3);
-    }
-    .btn-icon.btn-delete:hover { background: rgba(239,68,68,0.28); }
-
-    /* Move dropdown */
-    .move-select {
-      position: fixed; z-index: 9999;
-      background: var(--surface); border: 1px solid rgba(255,255,255,0.15);
-      border-radius: var(--radius-sm); padding: 0.4rem;
-      min-width: 175px; box-shadow: 0 8px 32px rgba(0,0,0,0.7);
-      display: none; flex-direction: column; gap: 2px;
-    }
-
-    .move-select.open { display: flex; }
-
-    .move-option {
-      padding: 0.4rem 0.75rem; font-size: 0.82rem; border-radius: 6px;
-      cursor: pointer; transition: background 0.15s;
-      border: none; background: transparent; color: var(--text);
-      text-align: left; font-family: var(--font); display: flex;
-      align-items: center; gap: 0.5rem;
-    }
-
-    .move-option:hover { background: var(--bg3); }
-
-    .move-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-
-    /* History tab */
-    .history-table-wrap { overflow-x: auto; }
-
-    .history-table {
-      width: 100%; border-collapse: collapse; font-size: 0.875rem;
-    }
-
-    .history-table th {
-      text-align: left; padding: 0.75rem 1rem;
-      background: var(--surface); color: var(--text-muted);
-      font-weight: 600; font-size: 0.78rem; letter-spacing: 0.5px;
-      text-transform: uppercase; border-bottom: 1px solid var(--border);
-    }
-
-    .history-table td {
-      padding: 0.7rem 1rem; border-bottom: 1px solid var(--border);
-      vertical-align: middle;
-    }
-
-    .history-table tr:hover td { background: var(--surface); }
-
-    .history-badge {
-      display: inline-flex; align-items: center; gap: 0.3rem;
-      padding: 0.2rem 0.6rem; border-radius: 50px;
-      font-size: 0.75rem; font-weight: 600;
-    }
-
-    /* Sync bar */
-    .sync-bar {
-      position: fixed; bottom: 1.5rem; right: 1.5rem;
-      display: flex; gap: 0.75rem; align-items: center; z-index: 200;
-    }
-
-    .btn-sync {
-      background: linear-gradient(135deg, var(--accent), #8b5cf6);
-      color: white; border: none; padding: 0.7rem 1.4rem;
-      border-radius: 50px; font-weight: 700; cursor: pointer;
-      font-family: var(--font); font-size: 0.9rem;
-      box-shadow: 0 4px 20px rgba(99,102,241,0.5);
-      transition: all 0.2s; display: flex; align-items: center; gap: 0.5rem;
-    }
-
-    .btn-sync:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(99,102,241,0.6); }
-    .btn-sync:active { transform: scale(0.97); }
-
-    .sync-status {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 50px; padding: 0.4rem 0.9rem;
-      font-size: 0.78rem; color: var(--text-muted);
-    }
-
-    /* Toast */
-    #toast {
-      position: fixed; bottom: 5rem; left: 50%; transform: translateX(-50%);
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 50px; padding: 0.6rem 1.4rem;
-      font-size: 0.85rem; z-index: 300;
-      opacity: 0; transition: opacity 0.3s;
-      pointer-events: none; white-space: nowrap;
-    }
-
-    #toast.show { opacity: 1; }
-
-    /* Notification permission banner */
-    #notif-banner {
-      background: linear-gradient(135deg, #f97316, #eab308);
-      color: white; padding: 0.6rem 1.5rem;
-      display: none; align-items: center; gap: 1rem;
-      font-size: 0.85rem; font-weight: 600;
-    }
-
-    #notif-banner button {
-      background: white; color: #333; border: none;
-      padding: 0.3rem 0.8rem; border-radius: 50px;
-      font-weight: 700; cursor: pointer; font-size: 0.8rem;
-    }
-
-    /* Inline add-task row inside each column */
-    .inline-add-row {
-      display: flex; gap: 0.4rem; padding: 0.4rem 0.5rem 0.5rem;
-      border-top: 1px solid var(--border); margin-top: auto;
-    }
-
-    .inline-add-input {
-      flex: 1; background: var(--bg3); border: 1px solid var(--border);
-      border-radius: var(--radius-sm); color: var(--text);
-      font-size: 0.82rem; padding: 0.35rem 0.6rem; outline: none;
-      font-family: var(--font);
-    }
-
-    .inline-add-input::placeholder { color: var(--text-muted); }
-    .inline-add-input:focus { border-color: var(--accent); }
-
-    .inline-add-btn {
-      background: var(--accent); color: white; border: none;
-      border-radius: var(--radius-sm); padding: 0.35rem 0.65rem;
-      font-size: 1rem; cursor: pointer; line-height: 1;
-      transition: background 0.15s;
-    }
-
-    .inline-add-btn:hover { background: var(--accent2); }
-
-    /* Responsive */
-    @media (max-width: 640px) {
-      .columns-grid { grid-template-columns: 1fr; }
-      .user-name { display: none; }
-      .header-logo { font-size: 1.1rem; }
-      .context-tab { padding: 0.35rem 0.9rem; font-size: 0.8rem; }
-      main { padding: 0.75rem; }
-      .sync-bar { bottom: 1rem; right: 1rem; }
-    }
-
-    /* Spinner */
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .spin { animation: spin 1s linear infinite; display: inline-block; }
-
-    /* Empty state */
-    .empty-col {
-      text-align: center; color: var(--text-muted);
-      font-size: 0.8rem; padding: 1.5rem 0.5rem;
-      opacity: 0.6;
-    }
-  </style>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<style>
+:root {
+  --today:     #ff6b35;
+  --tomorrow:  #f7c948;
+  --thisweek:  #2ecc71;
+  --nextweek:  #17c0eb;
+  --thismonth: #a55eea;
+  --nextmonth: #fd79a8;
+  --done:      #636e72;
+
+  --bg:     #0b0b12;
+  --bg2:    #10101a;
+  --bg3:    #16162a;
+  --card:   #1b1b2e;
+  --card2:  #21213a;
+  --card3:  #27274a;
+  --border: rgba(255,255,255,0.06);
+  --border2:rgba(255,255,255,0.13);
+  --text:   #eeeef8;
+  --muted:  #7070a0;
+  --accent: #6c63ff;
+  --acc2:   #9c94ff;
+  --star:   #ffd32a;
+  --r:14px; --r-sm:10px; --r-xs:7px;
+  --sh: 0 8px 40px rgba(0,0,0,0.55);
+  --font:'DM Sans',sans-serif;
+  --mono:'DM Mono',monospace;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(ellipse 80% 55% at 10% -5%, rgba(108,99,255,0.14) 0%,transparent 55%),
+    radial-gradient(ellipse 60% 45% at 90% 100%, rgba(253,121,168,0.09) 0%,transparent 55%),
+    radial-gradient(ellipse 50% 40% at 50% 50%, rgba(23,192,235,0.04) 0%,transparent 60%);
+}
+
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
+
+/* ── LOGIN ────────────────────────────────── */
+#login-screen{
+  position:fixed;inset:0;z-index:1000;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--bg);
+}
+
+.login-card{
+  background:var(--card);
+  border:1px solid var(--border2);
+  border-radius:28px;
+  padding:3rem 2.5rem;
+  text-align:center;
+  max-width:360px;width:90%;
+  box-shadow:var(--sh),0 0 120px rgba(108,99,255,0.12);
+  position:relative;overflow:hidden;
+}
+
+.login-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,#6c63ff,#a55eea,#fd79a8,#f7c948);
+}
+
+.login-glow{
+  position:absolute;top:-60px;left:50%;transform:translateX(-50%);
+  width:200px;height:200px;border-radius:50%;
+  background:radial-gradient(circle,rgba(108,99,255,0.18) 0%,transparent 70%);
+  pointer-events:none;
+}
+
+.login-icon{font-size:3rem;margin-bottom:1.2rem;display:block;position:relative;z-index:1}
+
+.login-card h1{
+  font-size:2.2rem;font-weight:800;letter-spacing:-1px;
+  background:linear-gradient(135deg,#9c94ff 0%,#fd79a8 60%,#f7c948 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  margin-bottom:0.3rem;position:relative;z-index:1;
+}
+
+.login-tagline{color:var(--muted);font-size:0.88rem;margin-bottom:2rem;position:relative;z-index:1}
+
+.google-btn{
+  display:flex;align-items:center;justify-content:center;gap:0.7rem;
+  background:white;color:#111;border:none;
+  padding:0.85rem 1.5rem;border-radius:50px;
+  font-size:0.93rem;font-weight:600;cursor:pointer;
+  width:100%;font-family:var(--font);
+  transition:all 0.2s;box-shadow:0 3px 14px rgba(0,0,0,0.35);
+  position:relative;z-index:1;
+}
+.google-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.45)}
+.google-btn svg{width:18px;height:18px;flex-shrink:0}
+.login-note{margin-top:1rem;font-size:0.7rem;color:var(--muted);line-height:1.6;position:relative;z-index:1}
+
+/* ── APP SHELL ────────────────────────────── */
+#app{position:relative;z-index:1;display:none;flex-direction:column;min-height:100vh}
+
+/* ── HEADER ───────────────────────────────── */
+header{
+  background:rgba(16,16,26,0.94);
+  backdrop-filter:blur(28px);
+  border-bottom:1px solid var(--border);
+  padding:0.45rem 1.25rem;
+  display:flex;align-items:center;gap:0.75rem;
+  position:sticky;top:0;z-index:200;
+}
+
+.logo{font-size:1rem;font-weight:800;letter-spacing:-0.4px;display:flex;align-items:center;gap:0.45rem}
+.logo-mark{
+  width:22px;height:22px;border-radius:7px;
+  background:linear-gradient(135deg,#6c63ff,#fd79a8);
+  display:flex;align-items:center;justify-content:center;
+  font-size:0.7rem;box-shadow:0 2px 10px rgba(108,99,255,0.45);
+}
+
+.pill-tabs{display:flex;background:var(--bg3);border-radius:50px;padding:3px;gap:2px}
+.pill-tab{
+  padding:0.28rem 0.9rem;border-radius:50px;
+  font-size:0.78rem;font-weight:600;border:none;
+  cursor:pointer;transition:all 0.18s;
+  color:var(--muted);background:transparent;
+  font-family:var(--font);white-space:nowrap;
+}
+.pill-tab.active{background:var(--accent);color:white;box-shadow:0 2px 12px rgba(108,99,255,0.5)}
+
+.hdr-right{margin-left:auto;display:flex;align-items:center;gap:0.55rem}
+
+/* sync dot */
+.sync-dot{width:7px;height:7px;border-radius:50%;background:#2ecc71;box-shadow:0 0 6px #2ecc71;transition:all 0.3s;flex-shrink:0}
+.sync-dot.syncing{background:#f7c948;box-shadow:0 0 6px #f7c948;animation:blink 1s ease-in-out infinite}
+.sync-dot.offline{background:#ff6b35;box-shadow:0 0 6px #ff6b35}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.35}}
+
+.user-chip{
+  display:flex;align-items:center;gap:0.4rem;
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:50px;padding:0.2rem 0.7rem 0.2rem 0.25rem;
+  cursor:pointer;transition:all 0.15s;
+}
+.user-chip:hover{border-color:var(--border2)}
+.user-avatar{width:24px;height:24px;border-radius:50%;object-fit:cover;border:1.5px solid var(--accent)}
+.user-name-sm{font-size:0.73rem;color:var(--muted);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ── PAGE TABS ────────────────────────────── */
+.page-tabs{
+  display:flex;background:var(--bg2);
+  border-bottom:1px solid var(--border);
+  padding:0 1.25rem;
+}
+.page-tab{
+  padding:0.55rem 1.2rem;font-size:0.82rem;font-weight:600;
+  border:none;background:transparent;color:var(--muted);
+  cursor:pointer;border-bottom:2px solid transparent;
+  transition:all 0.18s;font-family:var(--font);
+  display:flex;align-items:center;gap:0.35rem;
+}
+.page-tab.active{color:var(--acc2);border-bottom-color:var(--acc2)}
+
+/* ── BANNERS ──────────────────────────────── */
+#notif-banner{
+  background:linear-gradient(90deg,#f7c948dd,#ff6b35dd);
+  color:#111;padding:0.5rem 1.25rem;
+  display:none;align-items:center;gap:0.75rem;
+  font-size:0.8rem;font-weight:600;
+}
+#notif-banner button{
+  background:rgba(0,0,0,0.12);color:#111;border:none;
+  padding:0.25rem 0.7rem;border-radius:50px;
+  font-weight:700;cursor:pointer;font-size:0.75rem;font-family:var(--font);
+}
+#notif-banner .close-btn{background:transparent;font-size:1.1rem;padding:0 0.2rem}
+
+#firebase-banner{
+  background:var(--card);border-bottom:1px solid var(--border);
+  padding:0.4rem 1.25rem;display:none;
+  align-items:center;gap:0.5rem;
+  font-size:0.73rem;color:var(--muted);
+}
+
+/* ── MAIN ─────────────────────────────────── */
+main{padding:1.25rem;flex:1;padding-bottom:5.5rem}
+
+/* ── QUICK-ADD BAR ────────────────────────── */
+.add-bar{
+  display:flex;gap:0.55rem;margin-bottom:1.25rem;
+  background:var(--card);border:1px solid var(--border2);
+  border-radius:var(--r);padding:0.5rem 0.75rem;
+  align-items:center;transition:all 0.2s;
+  box-shadow:0 2px 12px rgba(0,0,0,0.2);
+}
+.add-bar:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px rgba(108,99,255,0.15),0 2px 12px rgba(0,0,0,0.25)}
+.add-bar-icon{font-size:1rem;flex-shrink:0;opacity:0.6}
+.add-bar input{flex:1;background:transparent;border:none;color:var(--text);font-size:0.88rem;outline:none;font-family:var(--font)}
+.add-bar input::placeholder{color:var(--muted)}
+.col-select{
+  background:var(--bg3);border:1px solid var(--border);
+  color:var(--text);padding:0.28rem 0.55rem;
+  border-radius:var(--r-xs);font-size:0.76rem;
+  cursor:pointer;font-family:var(--font);outline:none;
+}
+.btn-add{
+  background:linear-gradient(135deg,#6c63ff,#9c94ff);color:white;border:none;
+  padding:0.38rem 1rem;border-radius:var(--r-xs);
+  font-weight:700;cursor:pointer;font-size:0.8rem;
+  font-family:var(--font);transition:all 0.18s;white-space:nowrap;
+  box-shadow:0 2px 10px rgba(108,99,255,0.35);
+}
+.btn-add:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(108,99,255,0.5)}
+
+/* ── COLUMN GRID ──────────────────────────── */
+.columns-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(255px,1fr));
+  gap:1rem;align-items:start;
+}
+
+/* ── COLUMN CARD ──────────────────────────── */
+.column-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  display:flex;flex-direction:column;
+  min-height:180px;
+  transition:border-color 0.2s,box-shadow 0.2s;
+  overflow:visible;
+  box-shadow:0 2px 16px rgba(0,0,0,0.2);
+}
+.column-card:hover{border-color:var(--border2);box-shadow:0 4px 24px rgba(0,0,0,0.3)}
+.column-card.drag-target{border-color:var(--accent);box-shadow:0 0 0 2px rgba(108,99,255,0.25)}
+
+.col-header{
+  padding:0.7rem 0.95rem 0.6rem;
+  display:flex;align-items:center;justify-content:space-between;
+  border-radius:var(--r) var(--r) 0 0;
+}
+.col-header-left{display:flex;align-items:center;gap:0.5rem}
+.col-emoji{font-size:1rem;line-height:1}
+.col-label{font-weight:700;font-size:0.75rem;letter-spacing:0.6px;text-transform:uppercase}
+.col-badge{
+  font-size:0.65rem;font-weight:700;font-family:var(--mono);
+  padding:0.12rem 0.48rem;border-radius:50px;background:rgba(0,0,0,0.25);
+  min-width:20px;text-align:center;
+}
+
+.col-divider{height:1px;background:var(--border);margin:0 0.6rem}
+
+.col-body{
+  padding:0.5rem;flex:1;
+  display:flex;flex-direction:column;gap:0.35rem;
+  min-height:60px;
+}
+.col-body.drag-over{background:rgba(108,99,255,0.06);border-radius:var(--r-sm)}
+
+.drop-hint{
+  text-align:center;color:var(--muted);
+  font-size:0.73rem;padding:1.4rem 0.5rem;
+  border:1.5px dashed var(--border2);border-radius:var(--r-xs);
+  opacity:0.5;pointer-events:none;
+}
+
+/* ── TASK CARD ────────────────────────────── */
+.task-card{
+  background:var(--card2);
+  border:1px solid var(--border);
+  border-radius:var(--r-sm);
+  padding:0.6rem 0.7rem;
+  display:flex;align-items:flex-start;gap:0.45rem;
+  cursor:grab;
+  transition:transform 0.15s,box-shadow 0.15s,border-color 0.15s,background 0.15s;
+  position:relative;
+}
+.task-card:hover{
+  transform:translateY(-2px);
+  box-shadow:0 6px 20px rgba(0,0,0,0.4);
+  border-color:var(--border2);
+  background:var(--card3);
+}
+.task-card:active{cursor:grabbing}
+.task-card.dragging{opacity:0.3;transform:scale(0.96)}
+.task-card.starred{border-left:2.5px solid var(--star);padding-left:0.55rem}
+
+.task-text{flex:1;font-size:0.85rem;line-height:1.5;word-break:break-word;padding-top:1px}
+
+.task-actions{display:flex;gap:0.25rem;align-items:center;flex-shrink:0}
+
+/* ── ACTION BUTTONS ───────────────────────── */
+.btn-icon{
+  border:1px solid transparent;cursor:pointer;
+  font-size:0.7rem;font-weight:700;padding:3px 7px;
+  border-radius:var(--r-xs);transition:all 0.15s;
+  display:flex;align-items:center;gap:3px;
+  white-space:nowrap;font-family:var(--font);line-height:1.3;
+}
+.btn-icon:hover{transform:translateY(-1px)}
+
+.btn-star{background:rgba(255,211,42,0.12);color:#ffd32a;border-color:rgba(255,211,42,0.3)}
+.btn-star:hover,.btn-star.active{background:rgba(255,211,42,0.25);border-color:#ffd32a}
+
+.btn-move{background:rgba(108,99,255,0.14);color:#9c94ff;border-color:rgba(108,99,255,0.32)}
+.btn-move:hover{background:rgba(108,99,255,0.28);border-color:#9c94ff}
+
+.btn-delete{background:rgba(255,107,53,0.1);color:#ff8a65;border-color:rgba(255,107,53,0.25)}
+.btn-delete:hover{background:rgba(255,107,53,0.25);border-color:#ff6b35;color:#ff6b35}
+
+/* ── MOVE MENU (fixed portal) ─────────────── */
+.move-menu{
+  position:fixed;z-index:99999;
+  background:var(--card);
+  border:1px solid var(--border2);
+  border-radius:var(--r-sm);
+  padding:0.35rem;min-width:172px;
+  box-shadow:0 16px 48px rgba(0,0,0,0.75),0 0 0 1px rgba(255,255,255,0.04);
+  display:none;flex-direction:column;gap:1px;
+  pointer-events:auto;
+  /* prevent it from closing when mouse moves from btn to menu */
+}
+.move-menu.open{display:flex}
+.move-option{
+  padding:0.45rem 0.75rem;font-size:0.8rem;
+  border-radius:var(--r-xs);cursor:pointer;
+  border:none;background:transparent;color:var(--text);
+  text-align:left;font-family:var(--font);
+  display:flex;align-items:center;gap:0.5rem;
+  transition:background 0.12s;
+}
+.move-option:hover{background:var(--bg3);color:white}
+.move-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+
+/* ── INLINE ADD ───────────────────────────── */
+.inline-add-row{
+  display:flex;gap:0.35rem;
+  padding:0.4rem 0.5rem 0.5rem;
+  border-top:1px solid var(--border);
+}
+.inline-add-input{
+  flex:1;background:var(--bg3);
+  border:1px solid var(--border);
+  border-radius:var(--r-xs);color:var(--text);
+  font-size:0.78rem;padding:0.32rem 0.55rem;
+  outline:none;font-family:var(--font);transition:border-color 0.15s;
+}
+.inline-add-input::placeholder{color:var(--muted)}
+.inline-add-input:focus{border-color:var(--accent);background:var(--card2)}
+.inline-add-btn{
+  background:var(--accent);color:white;border:none;
+  border-radius:var(--r-xs);padding:0.32rem 0.65rem;
+  font-size:1rem;font-weight:700;cursor:pointer;
+  transition:all 0.15s;line-height:1;
+}
+.inline-add-btn:hover{background:var(--acc2);transform:scale(1.08)}
+
+/* ── SYNC BAR ─────────────────────────────── */
+.sync-bar{
+  position:fixed;bottom:1.25rem;right:1.25rem;
+  display:flex;gap:0.6rem;align-items:center;z-index:200;
+}
+.sync-label{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:50px;padding:0.35rem 0.8rem;
+  font-size:0.71rem;color:var(--muted);
+  display:flex;align-items:center;gap:0.4rem;
+  box-shadow:0 2px 12px rgba(0,0,0,0.3);
+}
+.btn-sync{
+  background:linear-gradient(135deg,#6c63ff,#a55eea);
+  color:white;border:none;padding:0.6rem 1.25rem;
+  border-radius:50px;font-weight:700;cursor:pointer;
+  font-family:var(--font);font-size:0.82rem;
+  box-shadow:0 4px 20px rgba(108,99,255,0.5);
+  transition:all 0.2s;display:flex;align-items:center;gap:0.4rem;
+}
+.btn-sync:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(108,99,255,0.65)}
+.btn-sync:active{transform:scale(0.97)}
+
+/* ── HISTORY TABLE ────────────────────────── */
+.history-wrap{overflow-x:auto;border-radius:var(--r);border:1px solid var(--border);background:var(--card)}
+.history-table{width:100%;border-collapse:collapse;font-size:0.82rem}
+.history-table th{
+  text-align:left;padding:0.7rem 1rem;
+  background:var(--card2);color:var(--muted);
+  font-weight:600;font-size:0.7rem;letter-spacing:0.6px;
+  text-transform:uppercase;border-bottom:1px solid var(--border);
+}
+.history-table td{padding:0.65rem 1rem;border-bottom:1px solid var(--border);vertical-align:middle}
+.history-table tr:last-child td{border-bottom:none}
+.history-table tr:hover td{background:var(--card2)}
+.hbadge{
+  display:inline-flex;align-items:center;gap:0.3rem;
+  padding:0.18rem 0.55rem;border-radius:50px;
+  font-size:0.7rem;font-weight:600;
+}
+
+/* ── TOAST ────────────────────────────────── */
+#toast{
+  position:fixed;bottom:4.5rem;left:50%;transform:translateX(-50%) translateY(8px);
+  background:var(--card2);border:1px solid var(--border2);
+  border-radius:50px;padding:0.5rem 1.25rem;
+  font-size:0.82rem;z-index:9998;
+  opacity:0;transition:opacity 0.22s,transform 0.22s;
+  pointer-events:none;white-space:nowrap;
+  box-shadow:var(--sh);
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── UTILS ────────────────────────────────── */
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{animation:spin 0.8s linear infinite;display:inline-block}
+
+@media(max-width:600px){
+  .columns-grid{grid-template-columns:1fr}
+  .user-name-sm{display:none}
+  main{padding:0.75rem;padding-bottom:5.5rem}
+  .sync-bar{bottom:0.75rem;right:0.75rem}
+  .sync-label{display:none}
+}
+</style>
 </head>
 <body>
 
-<!-- ════════════ LOGIN ════════════ -->
+<!-- ═══ LOGIN ═══ -->
 <div id="login-screen">
   <div class="login-card">
-    <div class="login-logo">✅</div>
+    <div class="login-glow"></div>
+    <span class="login-icon">✅</span>
     <h1>TaskFlow</h1>
-    <p>Your personal + office task manager.<br/>Sign in to sync across all devices.</p>
+    <p class="login-tagline">Personal &amp; office tasks, synced everywhere.</p>
     <button class="google-btn" onclick="handleGoogleSignIn()">
       <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -478,94 +454,89 @@
       </svg>
       Continue with Google
     </button>
-    <p style="margin-top:1rem; font-size:0.75rem; opacity:0.5;">
-      ⚠️ Add your Google Client ID in app.js to enable real sign-in.<br/>
-      For now, click to demo with a test account.
-    </p>
+    <p class="login-note">⚠️ Demo mode — add your Google Client ID &amp; Firebase config in app.js for real sync.</p>
   </div>
 </div>
 
-<!-- ════════════ APP ════════════ -->
+<!-- ═══ APP ═══ -->
 <div id="app">
-  <!-- Notification banner -->
   <div id="notif-banner">
-    🔔 Enable notifications to get priority task reminders every 2 hours!
+    🔔 Enable notifications for ⭐ priority reminders every 2 hours!
     <button onclick="requestNotifications()">Enable</button>
-    <button onclick="document.getElementById('notif-banner').style.display='none'" style="background:transparent;color:white;font-size:1.2rem;">×</button>
+    <button class="close-btn" onclick="this.parentElement.style.display='none'">×</button>
+  </div>
+  <div id="firebase-banner">
+    ☁️ <span id="firebase-status">Connecting…</span>
   </div>
 
-  <!-- Header -->
   <header>
-    <div class="header-logo">Task<span>Flow</span></div>
-    <div class="context-tabs">
-      <button class="context-tab active" onclick="switchContext('personal')">👤 Personal</button>
-      <button class="context-tab" onclick="switchContext('office')">💼 Office</button>
+    <div class="logo">
+      <div class="logo-mark">✓</div>
+      TaskFlow
     </div>
-    <div class="header-right">
-      <span class="user-name" id="user-name-el"></span>
-      <img class="user-avatar" id="user-avatar-el" src="" alt="User" onerror="this.style.display='none'" onclick="signOut()" title="Sign out" />
+    <div class="pill-tabs">
+      <button class="pill-tab active" onclick="switchContext('personal')">👤 Personal</button>
+      <button class="pill-tab" onclick="switchContext('office')">💼 Office</button>
+    </div>
+    <div class="hdr-right">
+      <div class="sync-dot" id="sync-dot" title="Sync status"></div>
+      <div class="user-chip" onclick="signOut()" title="Click to sign out">
+        <img class="user-avatar" id="user-avatar-el" src="" alt="" onerror="this.style.display='none'" />
+        <span class="user-name-sm" id="user-name-el"></span>
+      </div>
     </div>
   </header>
 
-  <!-- Page tabs -->
   <div class="page-tabs">
-    <button class="page-tab active" onclick="switchPage('tasks')" id="tab-tasks">📋 Tasks</button>
-    <button class="page-tab" onclick="switchPage('history')" id="tab-history">🕰️ History</button>
+    <button class="page-tab active" id="tab-tasks" onclick="switchPage('tasks')">📋 Tasks</button>
+    <button class="page-tab" id="tab-history" onclick="switchPage('history')">🕰️ History</button>
   </div>
 
-  <!-- Main -->
   <main>
-    <!-- Add task bar -->
     <div class="add-bar" id="add-bar">
-      <span style="font-size:1.2rem;">➕</span>
-      <input type="text" id="task-input" placeholder="Add a new task… press Enter or click Add" onkeydown="if(event.key==='Enter')addTask()" />
+      <span class="add-bar-icon">＋</span>
+      <input type="text" id="task-input" placeholder="Quick-add a task… pick column &amp; press Enter" onkeydown="if(event.key==='Enter')addTask()" />
       <select class="col-select" id="col-select">
-        <option value="today">Today</option>
-        <option value="tomorrow">Tomorrow</option>
-        <option value="thisweek">This Week</option>
-        <option value="nextweek">Next Week</option>
-        <option value="thismonth">This Month</option>
-        <option value="nextmonth">Next Month</option>
+        <option value="today">🔥 Today</option>
+        <option value="tomorrow">🌅 Tomorrow</option>
+        <option value="thisweek">📆 This Week</option>
+        <option value="nextweek">🗓️ Next Week</option>
+        <option value="thismonth">📅 This Month</option>
+        <option value="nextmonth">🗃️ Next Month</option>
       </select>
       <button class="btn-add" onclick="addTask()">Add</button>
     </div>
 
-    <!-- Tasks page -->
     <div id="page-tasks">
       <div class="columns-grid" id="columns-grid"></div>
     </div>
 
-    <!-- History page -->
-    <div id="page-history" style="display:none;">
-      <div class="history-table-wrap">
+    <div id="page-history" style="display:none">
+      <div class="history-wrap">
         <table class="history-table">
-          <thead>
-            <tr>
-              <th>Task</th>
-              <th>Context</th>
-              <th>Was In</th>
-              <th>Completed</th>
-              <th>⭐</th>
-            </tr>
-          </thead>
+          <thead><tr><th>Task</th><th>Context</th><th>Was In</th><th>Completed</th><th>⭐</th></tr></thead>
           <tbody id="history-body"></tbody>
         </table>
-        <div id="history-empty" style="text-align:center;padding:3rem;color:var(--text-muted);display:none;">
-          No completed tasks yet. Tasks marked Done will appear here after 24 hours.
+        <div id="history-empty" style="text-align:center;padding:3rem;color:var(--muted);display:none">
+          No completed tasks yet. Tasks marked Done appear here after 24 hours.
         </div>
       </div>
     </div>
   </main>
 
-  <!-- Sync bar -->
   <div class="sync-bar">
-    <div class="sync-status" id="sync-status">Last synced: just now</div>
-    <button class="btn-sync" onclick="saveAndSync()">💾 Save & Sync</button>
+    <div class="sync-label" id="sync-label">
+      <span id="sync-dot-2" style="width:6px;height:6px;border-radius:50%;background:#2ecc71;display:inline-block;flex-shrink:0"></span>
+      <span id="sync-status">Synced</span>
+    </div>
+    <button class="btn-sync" onclick="saveAndSync()">💾 Save &amp; Sync</button>
   </div>
 
-  <!-- Toast -->
   <div id="toast"></div>
 </div>
+
+<!-- Global move menu rendered as a body-level portal so it's never clipped -->
+<div class="move-menu" id="global-move-menu"></div>
 
 <script src="app.js"></script>
 </body>
