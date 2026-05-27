@@ -34,7 +34,7 @@ const COL_MAP = Object.fromEntries(COLUMNS.map(c => [c.id, c]));
 
 // ─── STATE ──────────────────────────────────────────────────
 let state = {
-  context: 'personal',
+  context: 'office', // always default to office on load
   page: 'tasks',
   tasks: [],
   history: [],
@@ -203,6 +203,9 @@ function signOut() {
 
 // ─── INIT ────────────────────────────────────────────────────
 function initApp() {
+  // Always start on office tab regardless of saved state
+  state.context = 'office';
+  applyContextTheme('office');
   initFirebase();
   cloudListen();           // subscribe to real-time updates
   autoShiftColumns(true);
@@ -472,10 +475,38 @@ function onDrop(event, colId) {
 }
 
 // ─── NAVIGATION ──────────────────────────────────────────────
+function applyContextTheme(ctx) {
+  const body = document.body;
+  body.classList.remove('ctx-personal','ctx-office');
+  body.classList.add(`ctx-${ctx}`);
+
+  // Update accent colour strip at top
+  const strip = document.getElementById('ctx-bar');
+  const badge = document.getElementById('ctx-badge');
+  const logoMark = document.getElementById('logo-mark');
+  const avatar = document.getElementById('user-avatar-el');
+
+  if (ctx === 'office') {
+    if (strip)    strip.style.background = 'linear-gradient(90deg,#0ea5a0,#34d1cb,#10b981)';
+    if (badge)    { badge.textContent = '💼 OFFICE'; badge.style.background = '#0ea5a0'; }
+    if (logoMark) logoMark.style.background = 'linear-gradient(135deg,#0ea5a0,#10b981)';
+    if (avatar)   avatar.style.borderColor = '#0ea5a0';
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content','#06151a');
+  } else {
+    if (strip)    strip.style.background = 'linear-gradient(90deg,#6c63ff,#a55eea,#fd79a8)';
+    if (badge)    { badge.textContent = '👤 PERSONAL'; badge.style.background = '#6c63ff'; }
+    if (logoMark) logoMark.style.background = 'linear-gradient(135deg,#6c63ff,#fd79a8)';
+    if (avatar)   avatar.style.borderColor = '#6c63ff';
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content','#060614');
+  }
+}
+
 function switchContext(ctx) {
   state.context = ctx;
-  document.querySelectorAll('.pill-tab').forEach((el,i) =>
-    el.classList.toggle('active',(i===0&&ctx==='personal')||(i===1&&ctx==='office')));
+  // Update pill tab active state
+  document.getElementById('tab-personal')?.classList.toggle('active', ctx==='personal');
+  document.getElementById('tab-office')?.classList.toggle('active',   ctx==='office');
+  applyContextTheme(ctx);
   localSave(); renderColumns(); renderHistory();
 }
 

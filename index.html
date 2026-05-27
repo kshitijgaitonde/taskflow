@@ -45,14 +45,50 @@
 
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
-body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;transition:background 0.4s}
+
+/* ── PERSONAL THEME (indigo/pink) ── */
+body.ctx-personal {
+  --accent: #6c63ff;
+  --acc2:   #9c94ff;
+  --ctx-glow1: rgba(108,99,255,0.16);
+  --ctx-glow2: rgba(253,121,168,0.11);
+  --ctx-glow3: rgba(23,192,235,0.04);
+  --card:  #1b1b2e;
+  --card2: #21213a;
+  --card3: #27274a;
+  --bg:    #0b0b12;
+  --bg2:   #10101a;
+  --bg3:   #16162a;
+  --muted: #7070a0;
+  --border: rgba(255,255,255,0.06);
+  --border2: rgba(255,255,255,0.13);
+}
+
+/* ── OFFICE THEME (teal/emerald) ── */
+body.ctx-office {
+  --accent: #0ea5a0;
+  --acc2:   #34d1cb;
+  --ctx-glow1: rgba(14,165,160,0.15);
+  --ctx-glow2: rgba(16,185,129,0.09);
+  --ctx-glow3: rgba(6,182,212,0.05);
+  --card:  #0c1f1f;
+  --card2: #112828;
+  --card3: #163232;
+  --bg:    #060e0e;
+  --bg2:   #091616;
+  --bg3:   #0d1c1c;
+  --muted: #5a8a88;
+  --border: rgba(20,184,166,0.1);
+  --border2: rgba(20,184,166,0.2);
+}
 
 body::before{
-  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;transition:all 0.5s;
   background:
-    radial-gradient(ellipse 80% 55% at 10% -5%, rgba(108,99,255,0.14) 0%,transparent 55%),
-    radial-gradient(ellipse 60% 45% at 90% 100%, rgba(253,121,168,0.09) 0%,transparent 55%),
-    radial-gradient(ellipse 50% 40% at 50% 50%, rgba(23,192,235,0.04) 0%,transparent 60%);
+    radial-gradient(ellipse 80% 55% at 10% -5%, var(--ctx-glow1) 0%,transparent 55%),
+    radial-gradient(ellipse 60% 45% at 90% 100%, var(--ctx-glow2) 0%,transparent 55%),
+    radial-gradient(ellipse 50% 40% at 50% 50%, var(--ctx-glow3) 0%,transparent 60%);
 }
 
 ::-webkit-scrollbar{width:4px;height:4px}
@@ -142,7 +178,7 @@ header{
   color:var(--muted);background:transparent;
   font-family:var(--font);white-space:nowrap;
 }
-.pill-tab.active{background:var(--accent);color:white;box-shadow:0 2px 12px rgba(108,99,255,0.5)}
+.pill-tab.active{background:var(--accent);color:white;box-shadow:0 2px 16px rgba(0,0,0,0.4)}
 
 .hdr-right{margin-left:auto;display:flex;align-items:center;gap:0.55rem}
 
@@ -175,7 +211,7 @@ header{
   transition:all 0.18s;font-family:var(--font);
   display:flex;align-items:center;gap:0.35rem;
 }
-.page-tab.active{color:var(--acc2);border-bottom-color:var(--acc2)}
+.page-tab.active{color:var(--acc2);border-bottom-color:var(--acc2);transition:color 0.3s,border-color 0.3s}
 
 /* ── BANNERS ──────────────────────────────── */
 #notif-banner{
@@ -209,7 +245,7 @@ main{padding:1.25rem;flex:1;padding-bottom:5.5rem}
   align-items:center;transition:all 0.2s;
   box-shadow:0 2px 12px rgba(0,0,0,0.2);
 }
-.add-bar:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px rgba(108,99,255,0.15),0 2px 12px rgba(0,0,0,0.25)}
+.add-bar:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px rgba(var(--accent-rgb,108,99,255),0.15),0 2px 12px rgba(0,0,0,0.25)}
 .add-bar-icon{font-size:1rem;flex-shrink:0;opacity:0.6}
 .add-bar input{flex:1;background:transparent;border:none;color:var(--text);font-size:0.88rem;outline:none;font-family:var(--font)}
 .add-bar input::placeholder{color:var(--muted)}
@@ -361,7 +397,7 @@ main{padding:1.25rem;flex:1;padding-bottom:5.5rem}
   outline:none;font-family:var(--font);transition:border-color 0.15s;
 }
 .inline-add-input::placeholder{color:var(--muted)}
-.inline-add-input:focus{border-color:var(--accent);background:var(--card2)}
+.inline-add-input:focus{border-color:var(--acc2);background:var(--card2)}
 .inline-add-btn{
   background:var(--accent);color:white;border:none;
   border-radius:var(--r-xs);padding:0.32rem 0.65rem;
@@ -469,14 +505,21 @@ main{padding:1.25rem;flex:1;padding-bottom:5.5rem}
     ☁️ <span id="firebase-status">Connecting…</span>
   </div>
 
+  <!-- context label bar -->
+  <div id="ctx-bar" style="
+    height:3px;
+    background:linear-gradient(90deg,var(--accent),var(--acc2));
+    transition:background 0.4s;
+  "></div>
+
   <header>
     <div class="logo">
-      <div class="logo-mark">✓</div>
+      <div class="logo-mark" id="logo-mark" style="transition:background 0.4s">✓</div>
       TaskFlow
     </div>
     <div class="pill-tabs">
-      <button class="pill-tab active" onclick="switchContext('personal')">👤 Personal</button>
-      <button class="pill-tab" onclick="switchContext('office')">💼 Office</button>
+      <button class="pill-tab" id="tab-personal" onclick="switchContext('personal')">👤 Personal</button>
+      <button class="pill-tab active" id="tab-office" onclick="switchContext('office')">💼 Office</button>
     </div>
     <div class="hdr-right">
       <div class="sync-dot" id="sync-dot" title="Sync status"></div>
@@ -487,9 +530,17 @@ main{padding:1.25rem;flex:1;padding-bottom:5.5rem}
     </div>
   </header>
 
-  <div class="page-tabs">
+  <div class="page-tabs" id="page-tabs-bar">
     <button class="page-tab active" id="tab-tasks" onclick="switchPage('tasks')">📋 Tasks</button>
     <button class="page-tab" id="tab-history" onclick="switchPage('history')">🕰️ History</button>
+    <div style="margin-left:auto;display:flex;align-items:center;padding-right:0.5rem">
+      <span id="ctx-badge" style="
+        font-size:0.68rem;font-weight:700;padding:0.18rem 0.65rem;
+        border-radius:50px;letter-spacing:0.4px;
+        background:var(--accent);color:white;
+        transition:background 0.4s;opacity:0.9;
+      ">💼 OFFICE</span>
+    </div>
   </div>
 
   <main>
