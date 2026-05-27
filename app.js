@@ -4,7 +4,7 @@
 
 // ─── CONFIG ─────────────────────────────────────────────────
 // Step 1: Replace with your Google OAuth Client ID
-const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = '883637781494-2vb5bjeo04jtqmr22mo4v2ejfdls9tuo.apps.googleusercontent.com';
 
 // Step 2: Replace with your Firebase project config
 // Get it: Firebase Console → Project Settings → Your Apps → SDK Setup & Config
