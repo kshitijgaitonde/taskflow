@@ -372,7 +372,7 @@ function buildTaskEl(task) {
         ${task.starred?'⭐':'☆'}
       </button>
       <button class="btn-icon btn-move"
-              onmouseenter="openMoveMenu(event,'${task.id}')"
+              onclick="toggleMoveMenu(event,'${task.id}')"
               title="Move to…">⇄ Move</button>
       <button class="btn-icon btn-delete"
               onclick="deleteTask('${task.id}')"
@@ -408,13 +408,19 @@ function renderHistory() {
   });
 }
 
-// ─── MOVE MENU (Fix 2: hover-safe, always on top) ────────────
+// ─── MOVE MENU (click-based, works on phone & desktop) ───────
 const moveMenuEl = document.getElementById('global-move-menu');
-let moveMenuTimer = null;
 let moveMenuOpen  = false;
+let activeMoveBtnId = null;
 
-function openMoveMenu(event, taskId) {
-  clearTimeout(moveMenuTimer);
+function toggleMoveMenu(event, taskId) {
+  event.stopPropagation(); // prevent the outside-click listener firing immediately
+
+  // If already open for this same task, close it
+  if (moveMenuOpen && activeMoveBtnId === taskId) {
+    closeMoveMenu(); return;
+  }
+
   const task = state.tasks.find(t => t.id===taskId);
   if (!task) return;
 
@@ -422,7 +428,7 @@ function openMoveMenu(event, taskId) {
   moveMenuEl.innerHTML = COLUMNS
     .filter(c => c.id !== task.column)
     .map(c => `
-      <button class="move-option" onmousedown="moveTask('${taskId}','${c.id}')">
+      <button class="move-option" onclick="moveTask('${taskId}','${c.id}')">
         <span class="move-dot" style="background:${c.color}"></span>${c.emoji} ${c.label}
       </button>`).join('');
 
@@ -438,21 +444,18 @@ function openMoveMenu(event, taskId) {
   moveMenuEl.style.top  = `${Math.min(top, window.innerHeight - 280)}px`;
   moveMenuEl.classList.add('open');
   moveMenuOpen = true;
-
-  // ── Keep open while hovering btn OR menu, close after leaving both ──
-  btn.onmouseleave = () => { moveMenuTimer = setTimeout(closeMoveMenu, 180); };
-  moveMenuEl.onmouseenter = () => clearTimeout(moveMenuTimer);
-  moveMenuEl.onmouseleave = () => { moveMenuTimer = setTimeout(closeMoveMenu, 180); };
+  activeMoveBtnId = taskId;
 }
 
 function closeMoveMenu() {
   moveMenuEl.classList.remove('open');
   moveMenuOpen = false;
+  activeMoveBtnId = null;
 }
 
-// Close on outside click or scroll
+// Close when clicking anywhere outside the menu
 document.addEventListener('click', e => {
-  if (!moveMenuEl.contains(e.target)) closeMoveMenu();
+  if (moveMenuOpen && !moveMenuEl.contains(e.target)) closeMoveMenu();
 });
 document.addEventListener('scroll', closeMoveMenu, true);
 
