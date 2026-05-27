@@ -10,12 +10,12 @@ const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
 // Get it: Firebase Console → Project Settings → Your Apps → SDK Setup & Config
 // This is the ONLY way to sync between laptop and phone!
 const FIREBASE_CONFIG = {
-  apiKey:            "YOUR_API_KEY",
-  authDomain:        "YOUR_PROJECT.firebaseapp.com",
-  projectId:         "YOUR_PROJECT_ID",
-  storageBucket:     "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId:             "YOUR_APP_ID"
+  apiKey: "AIzaSyBPetVrkWmo7gWb8ogwzTRksKVkxCfAYtA",
+  authDomain: "taskflow-b30a7.firebaseapp.com",
+  projectId: "taskflow-b30a7",
+  storageBucket: "taskflow-b30a7.firebasestorage.app",
+  messagingSenderId: "1015386918415",
+  appId: "1:1015386918415:web:dc9e26ec1a615fbbeadd7a"
 };
 
 const USE_FIREBASE = FIREBASE_CONFIG.apiKey !== "YOUR_API_KEY";
