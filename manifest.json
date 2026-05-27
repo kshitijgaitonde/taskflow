@@ -2,10 +2,11 @@
   "name": "TaskFlow – Personal & Office Tasks",
   "short_name": "TaskFlow",
   "description": "Your colorful task manager for personal and office use",
-  "start_url": "/",
+  "start_url": "/taskflow/",
+  "scope": "/taskflow/",
   "display": "standalone",
-  "background_color": "#0f0f1a",
-  "theme_color": "#6366f1",
+  "background_color": "#0b0b12",
+  "theme_color": "#6c63ff",
   "orientation": "portrait-primary",
   "icons": [
     {
@@ -22,20 +23,19 @@
     }
   ],
   "categories": ["productivity", "utilities"],
-  "screenshots": [],
   "shortcuts": [
     {
       "name": "Add Personal Task",
       "short_name": "Personal",
       "description": "Quick add a personal task",
-      "url": "/?ctx=personal",
+      "url": "/taskflow/?ctx=personal",
       "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "Add Office Task",
       "short_name": "Office",
       "description": "Quick add an office task",
-      "url": "/?ctx=office",
+      "url": "/taskflow/?ctx=office",
       "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
     }
   ]

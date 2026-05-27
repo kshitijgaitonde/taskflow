@@ -539,5 +539,12 @@ main{padding:1.25rem;flex:1;padding-bottom:5.5rem}
 <div class="move-menu" id="global-move-menu"></div>
 
 <script src="app.js"></script>
+<script>
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/taskflow/sw.js")
+      .then(() => console.log("SW registered"))
+      .catch(e => console.warn("SW error:", e));
+  }
+</script>
 </body>
 </html>
