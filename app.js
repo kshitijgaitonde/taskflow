@@ -290,6 +290,38 @@ function deleteTask(id) {
   saveState(); renderColumns();
 }
 
+function reorderTask(id, direction) {
+  // Find the task and its siblings in the same column+context
+  const task = state.tasks.find(t => t.id===id);
+  if (!task) return;
+
+  // Get indices of all tasks in same column+context, in render order
+  const siblings = state.tasks
+    .map((t, i) => ({ t, i }))
+    .filter(({ t }) => t.column===task.column && t.context===task.context);
+
+  const posInSiblings = siblings.findIndex(({ t }) => t.id===id);
+
+  if (direction==='up'   && posInSiblings===0) return;
+  if (direction==='down' && posInSiblings===siblings.length-1) return;
+
+  // Find the neighbour to swap with
+  const swapPos  = direction==='up' ? posInSiblings-1 : posInSiblings+1;
+  const idxA     = siblings[posInSiblings].i;
+  const idxB     = siblings[swapPos].i;
+
+  // Swap in the main array
+  const copy = [...state.tasks];
+  [copy[idxA], copy[idxB]] = [copy[idxB], copy[idxA]];
+  state.tasks = copy;
+
+  saveState(); renderColumns();
+  // Keep focus so user can keep pressing
+  requestAnimationFrame(() => {
+    document.querySelector(`.task-card[data-id="${id}"] .btn-${direction}`)?.focus();
+  });
+}
+
 function toggleStar(id) {
   state.tasks = state.tasks.map(t => t.id===id ? {...t, starred:!t.starred} : t);
   saveState(); renderColumns();
@@ -364,6 +396,14 @@ function buildTaskEl(task) {
   div.addEventListener('dragend', () => { div.classList.remove('dragging'); dragSrc=null; });
 
   div.innerHTML = `
+    <div class="task-reorder">
+      <button class="btn-reorder btn-up"
+              onclick="reorderTask('${task.id}','up')"
+              title="Move up">▲</button>
+      <button class="btn-reorder btn-down"
+              onclick="reorderTask('${task.id}','down')"
+              title="Move down">▼</button>
+    </div>
     <span class="task-text">${escapeHtml(task.text)}</span>
     <div class="task-actions">
       <button class="btn-icon btn-star${task.starred?' active':''}"
