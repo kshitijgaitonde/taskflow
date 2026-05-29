@@ -120,12 +120,52 @@ function updateSyncLabel() {
 // ─── SIGN IN ─────────────────────────────────────────────────
 function handleGoogleSignIn() {
   if (GOOGLE_CLIENT_ID !== 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com') {
-    google.accounts.id.initialize({client_id:GOOGLE_CLIENT_ID, callback:onGoogleToken});
-    google.accounts.id.prompt();
+    // Use renderButton approach — more reliable than prompt() across browsers
+    google.accounts.id.initialize({
+      client_id: GOOGLE_CLIENT_ID,
+      callback: onGoogleToken,
+      ux_mode: 'popup',           // explicit popup mode
+      auto_select: false,
+    });
+
+    // Try rendering a real Google button inside the existing button
+    const container = document.getElementById('google-btn-container');
+    if (container) {
+      container.innerHTML = ''; // clear any previous render
+      google.accounts.id.renderButton(container, {
+        type: 'standard',
+        shape: 'pill',
+        theme: 'outline',
+        text: 'continue_with',
+        size: 'large',
+        width: 280,
+      });
+      // Auto-click the rendered button
+      setTimeout(() => container.querySelector('div[role=button]')?.click(), 100);
+    } else {
+      // Fallback to prompt
+      google.accounts.id.prompt(notification => {
+        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+          // prompt was blocked — show manual button
+          showManualGoogleBtn();
+        }
+      });
+    }
   } else {
     loginUser({name:'Demo User',email:'demo@taskflow.app',
       picture:'https://ui-avatars.com/api/?name=Demo+User&background=6c63ff&color=fff&size=64'});
   }
+}
+
+function showManualGoogleBtn() {
+  const container = document.getElementById('google-btn-container');
+  if (!container) return;
+  container.style.display = 'block';
+  container.innerHTML = '';
+  google.accounts.id.renderButton(container, {
+    type: 'standard', shape: 'pill', theme: 'outline',
+    text: 'continue_with', size: 'large', width: 280,
+  });
 }
 function onGoogleToken(r) {
   const p=JSON.parse(atob(r.credential.split('.')[1]));
@@ -249,20 +289,35 @@ function nextOccurrenceForSlot(type, slotVal, fromDate) {
 }
 
 function columnForDate(targetStr, todayS) {
-  const today=new Date(todayS+'T00:00:00');
-  const target=new Date(targetStr+'T00:00:00');
-  const diff=Math.round((target-today)/86400000);
-  if(diff<0) return null;
-  if(diff===0) return 'today';
-  if(diff===1) return 'tomorrow';
-  const tm=mondayOf(todayS), tt=mondayOf(targetStr);
-  if(tt===tm) return 'thisweek';
-  const nm=new Date(tm); nm.setDate(nm.getDate()+7);
-  if(tt===nm.toISOString().slice(0,10)) return 'nextweek';
-  if(targetStr.slice(0,7)===todayS.slice(0,7)) return 'thismonth';
-  const nextMYM=new Date(today.getFullYear(),today.getMonth()+1,1).toISOString().slice(0,7);
-  if(targetStr.slice(0,7)===nextMYM) return 'nextmonth';
-  return null;
+  const today  = new Date(todayS   + 'T00:00:00');
+  const target = new Date(targetStr + 'T00:00:00');
+  const diff   = Math.round((target - today) / 86400000);
+
+  if (diff <  0) return null;      // past
+  if (diff === 0) return 'today';
+  if (diff === 1) return 'tomorrow';
+
+  // ── Week detection: compare the Monday of each date ───────
+  const todayMonday  = mondayOf(todayS);
+  const targetMonday = mondayOf(targetStr);
+
+  // Same calendar week as today (Mon–Sun)
+  if (targetMonday === todayMonday) return 'thisweek';
+
+  // Next calendar week
+  const nextMondayDate = new Date(todayMonday + 'T00:00:00');
+  nextMondayDate.setDate(nextMondayDate.getDate() + 7);
+  const nextMondayStr  = nextMondayDate.toISOString().slice(0, 10);
+  if (targetMonday === nextMondayStr) return 'nextweek';
+
+  // ── Month detection ────────────────────────────────────────
+  if (targetStr.slice(0,7) === todayS.slice(0,7)) return 'thismonth';
+
+  const nextMonthYM = new Date(today.getFullYear(), today.getMonth()+1, 1)
+                        .toISOString().slice(0, 7);
+  if (targetStr.slice(0,7) === nextMonthYM) return 'nextmonth';
+
+  return null; // too far ahead — don't show yet
 }
 
 function slotsFor(r) {
@@ -287,29 +342,34 @@ function generateRecurringCards() {
         ? today
         : nextOccurrenceForSlot(r.type, slotVal, today);
 
-      const col=columnForDate(nextDate, today);
-      if(!col) return;
+      const naturalCol = columnForDate(nextDate, today);
+      if(!naturalCol) return; // too far in future — don't show yet
 
       // Find existing active card for this slot
-      const existing=state.tasks.find(t=>t.recurringId===slotId && t.column!=='done');
+      const existing = state.tasks.find(t => t.recurringId===slotId && t.column!=='done');
       if(existing) {
-        // Update column if it shifted (e.g. tomorrow → today)
-        if(existing.column!==col) existing.column=col;
+        // ── FIX 2: If the user manually moved this card, respect it —
+        //    only auto-update the column if the user hasn't touched it.
+        //    We detect a manual move by the `manuallyMoved` flag set in moveTask.
+        if(!existing.manuallyMoved && existing.column !== naturalCol) {
+          existing.column = naturalCol;
+        }
         return;
       }
 
-      // Create new card for this slot
+      // No active card — create one in the natural column
       state.tasks.unshift({
-        id:       genId(),
-        text:     r.text,
-        column:   col,
-        context:  r.context,
-        starred:  r.starred||false,
-        recurringId: slotId,
+        id:              genId(),
+        text:            r.text,
+        column:          naturalCol,
+        context:         r.context,
+        starred:         r.starred||false,
+        recurringId:     slotId,
         recurTemplateId: r.id,
-        recurLabel: slotLabelFor(r, slotVal),
-        createdAt: Date.now(),
-        doneAt:   null,
+        recurLabel:      slotLabelFor(r, slotVal),
+        createdAt:       Date.now(),
+        doneAt:          null,
+        manuallyMoved:   false,
       });
     });
   });
@@ -460,8 +520,20 @@ function toggleStar(id){
 }
 function moveTask(id,newCol){
   const task=state.tasks.find(t=>t.id===id); if(!task) return;
-  if(newCol==='done'&&task.recurringId) completeRecurringCard(id);
-  else state.tasks=state.tasks.map(t=>t.id!==id?t:{...t,column:newCol,doneAt:newCol==='done'?Date.now():null});
+  if(newCol==='done'&&task.recurringId) {
+    completeRecurringCard(id);
+  } else {
+    state.tasks=state.tasks.map(t=>{
+      if(t.id!==id) return t;
+      return {
+        ...t,
+        column:       newCol,
+        doneAt:       newCol==='done' ? Date.now() : null,
+        // Flag as manually moved so generateRecurringCards won't override it
+        manuallyMoved: t.recurringId ? true : false,
+      };
+    });
+  }
   closeMoveMenu(); saveState(); renderColumns(); renderHistory();
   showToastMsg(`↪ Moved to ${COL_MAP[newCol].label}`);
 }
