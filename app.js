@@ -3,7 +3,8 @@
 // ═══════════════════════════════════════════════════════════
 
 const GOOGLE_CLIENT_ID = '883637781494-2vb5bjeo04jtqmr22mo4v2ejfdls9tuo.apps.googleusercontent.com';
-const firebaseConfig = {
+
+const FIREBASE_CONFIG = {
   apiKey: "AIzaSyBPetVrkWmo7gWb8ogwzTRksKVkxCfAYtA",
   authDomain: "taskflow-b30a7.firebaseapp.com",
   projectId: "taskflow-b30a7",
