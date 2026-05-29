@@ -514,6 +514,67 @@ main{padding:1.25rem;flex:1;padding-bottom:5.5rem}
 .modal-input:focus,.modal-select:focus{border-color:var(--accent)}
 .modal-select option{background:var(--bg3)}
 
+/* ── CHIP MULTI-SELECT ───────────────────────── */
+.chip-group{display:flex;flex-wrap:wrap;gap:0.4rem}
+.chip-group-dates{max-height:120px;overflow-y:auto;padding:0.2rem 0}
+.chip{
+  background:var(--bg3);border:1px solid var(--border2);
+  color:var(--muted2);border-radius:50px;
+  padding:0.28rem 0.65rem;font-size:0.75rem;font-weight:600;
+  cursor:pointer;font-family:var(--font);transition:all 0.15s;
+}
+.chip sup{font-size:0.55rem;vertical-align:super}
+.chip.selected{
+  background:var(--accent);border-color:var(--accent);
+  color:white;box-shadow:0 2px 8px rgba(108,99,255,0.4);
+}
+
+/* ── RECURRING COLUMN ────────────────────────── */
+.recur-column{
+  background:var(--card);
+  border:1px solid rgba(23,192,235,0.25);
+  border-radius:var(--r);
+  display:flex;flex-direction:column;
+  box-shadow:0 2px 16px rgba(0,0,0,0.2),0 0 0 1px rgba(23,192,235,0.08);
+}
+.recur-col-hdr{
+  padding:0.7rem 0.95rem 0.6rem;
+  display:flex;align-items:center;justify-content:space-between;
+  border-radius:var(--r) var(--r) 0 0;
+  background:rgba(23,192,235,0.1);
+  border-bottom:1px solid rgba(23,192,235,0.15);
+}
+.recur-col-body{
+  padding:0.5rem;flex:1;
+  display:flex;flex-direction:column;gap:0.35rem;
+  min-height:80px;overflow-y:auto;max-height:320px;
+}
+.recur-item{
+  background:var(--card2);border:1px solid rgba(23,192,235,0.15);
+  border-left:2.5px solid #17c0eb;
+  border-radius:var(--r-sm);padding:0.55rem 0.7rem;
+  display:flex;align-items:flex-start;gap:0.45rem;
+  transition:background 0.15s;
+}
+.recur-item:hover{background:var(--card3)}
+.recur-item-main{display:flex;flex-direction:column;gap:0.18rem;flex:1;min-width:0}
+.recur-item-text{font-size:0.85rem;word-break:break-word}
+.recur-badge{
+  font-size:0.6rem;font-weight:700;font-family:var(--mono);
+  color:#17c0eb;letter-spacing:0.3px;white-space:nowrap;opacity:0.85;
+}
+.recur-col-footer{
+  padding:0.5rem;border-top:1px solid rgba(23,192,235,0.12);
+}
+.btn-add-recur{
+  width:100%;background:rgba(23,192,235,0.1);
+  border:1px dashed rgba(23,192,235,0.3);
+  color:#17c0eb;border-radius:var(--r-xs);
+  padding:0.4rem;font-size:0.78rem;font-weight:600;
+  cursor:pointer;font-family:var(--font);transition:all 0.15s;
+}
+.btn-add-recur:hover{background:rgba(23,192,235,0.2);border-style:solid}
+
 /* ── UTILS ────────────────────────────────── */
 @keyframes spin{to{transform:rotate(360deg)}}
 .spin{animation:spin 0.8s linear infinite;display:inline-block}
@@ -588,7 +649,6 @@ main{padding:1.25rem;flex:1;padding-bottom:5.5rem}
   <div class="page-tabs" id="page-tabs-bar">
     <button class="page-tab active" id="tab-tasks" onclick="switchPage('tasks')">📋 Tasks</button>
     <button class="page-tab" id="tab-history" onclick="switchPage('history')">🕰️ History</button>
-    <button class="page-tab" id="tab-recurring" onclick="switchPage('recurring')">🔁 Recurring</button>
     <div style="margin-left:auto;display:flex;align-items:center;padding-right:0.5rem">
       <span id="ctx-badge" style="
         font-size:0.68rem;font-weight:700;padding:0.18rem 0.65rem;
@@ -631,21 +691,6 @@ main{padding:1.25rem;flex:1;padding-bottom:5.5rem}
     </div>
   </main>
 
-  <!-- ═══ RECURRING PAGE ═══ -->
-  <div id="page-recurring" style="display:none">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
-      <div>
-        <div style="font-family:var(--display,sans-serif);font-size:1.1rem;font-weight:800">🔁 Recurring Tasks</div>
-        <div style="font-size:0.75rem;color:var(--muted);margin-top:0.2rem">These auto-generate cards into the right column as dates approach.</div>
-      </div>
-      <button class="btn-add" onclick="openRecurModal()" style="white-space:nowrap">＋ New Recurring</button>
-    </div>
-    <div id="recur-empty" style="text-align:center;padding:3rem;color:var(--muted);display:none">
-      No recurring tasks yet. Click "＋ New Recurring" to create one.
-    </div>
-    <div id="recur-list" style="display:flex;flex-direction:column;gap:0.5rem"></div>
-  </div>
-
   <!-- ═══ RECURRING MODAL ═══ -->
   <div id="recur-modal" style="
     display:none;position:fixed;inset:0;z-index:5000;
@@ -678,26 +723,54 @@ main{padding:1.25rem;flex:1;padding-bottom:5.5rem}
         </select>
       </div>
 
-      <!-- Weekday picker (weekly only) -->
+      <!-- Weekday multi-picker (weekly only) -->
       <div class="modal-row" id="recur-weekday-row">
-        <label class="modal-label">On which day?</label>
-        <select id="recur-weekday" class="modal-select">
-          <option value="1">Monday</option>
-          <option value="2">Tuesday</option>
-          <option value="3">Wednesday</option>
-          <option value="4">Thursday</option>
-          <option value="5">Friday</option>
-          <option value="6">Saturday</option>
-          <option value="0">Sunday</option>
-        </select>
+        <label class="modal-label">On which day(s)? <span style="font-weight:400;text-transform:none;opacity:0.6">Select one or more</span></label>
+        <div class="chip-group" id="chips-weekly">
+          <button type="button" class="chip" data-val="1" onclick="toggleChip(this,'weekly')">Mon</button>
+          <button type="button" class="chip" data-val="2" onclick="toggleChip(this,'weekly')">Tue</button>
+          <button type="button" class="chip" data-val="3" onclick="toggleChip(this,'weekly')">Wed</button>
+          <button type="button" class="chip" data-val="4" onclick="toggleChip(this,'weekly')">Thu</button>
+          <button type="button" class="chip" data-val="5" onclick="toggleChip(this,'weekly')">Fri</button>
+          <button type="button" class="chip" data-val="6" onclick="toggleChip(this,'weekly')">Sat</button>
+          <button type="button" class="chip" data-val="0" onclick="toggleChip(this,'weekly')">Sun</button>
+        </div>
       </div>
 
-      <!-- Month date picker (monthly only) -->
+      <!-- Month date multi-picker (monthly only) -->
       <div class="modal-row" id="recur-monthdate-row" style="display:none">
-        <label class="modal-label">On which date?</label>
-        <select id="recur-monthdate" class="modal-select">
-          ${' '.join([f'<option value="{i}">{i}{"st" if i==1 else "nd" if i==2 else "rd" if i==3 else "th"} of every month</option>' for i in range(1,29)])}
-        </select>
+        <label class="modal-label">On which date(s)? <span style="font-weight:400;text-transform:none;opacity:0.6">Select one or more</span></label>
+        <div class="chip-group chip-group-dates" id="chips-monthly">
+          <button type="button" class="chip" data-val="1" onclick="toggleChip(this,'monthly')">1<sup>st</sup></button>
+          <button type="button" class="chip" data-val="2" onclick="toggleChip(this,'monthly')">2<sup>nd</sup></button>
+          <button type="button" class="chip" data-val="3" onclick="toggleChip(this,'monthly')">3<sup>rd</sup></button>
+          <button type="button" class="chip" data-val="4" onclick="toggleChip(this,'monthly')">4<sup>th</sup></button>
+          <button type="button" class="chip" data-val="5" onclick="toggleChip(this,'monthly')">5<sup>th</sup></button>
+          <button type="button" class="chip" data-val="6" onclick="toggleChip(this,'monthly')">6<sup>th</sup></button>
+          <button type="button" class="chip" data-val="7" onclick="toggleChip(this,'monthly')">7<sup>th</sup></button>
+          <button type="button" class="chip" data-val="8" onclick="toggleChip(this,'monthly')">8<sup>th</sup></button>
+          <button type="button" class="chip" data-val="9" onclick="toggleChip(this,'monthly')">9<sup>th</sup></button>
+          <button type="button" class="chip" data-val="10" onclick="toggleChip(this,'monthly')">10<sup>th</sup></button>
+          <button type="button" class="chip" data-val="11" onclick="toggleChip(this,'monthly')">11<sup>th</sup></button>
+          <button type="button" class="chip" data-val="12" onclick="toggleChip(this,'monthly')">12<sup>th</sup></button>
+          <button type="button" class="chip" data-val="13" onclick="toggleChip(this,'monthly')">13<sup>th</sup></button>
+          <button type="button" class="chip" data-val="14" onclick="toggleChip(this,'monthly')">14<sup>th</sup></button>
+          <button type="button" class="chip" data-val="15" onclick="toggleChip(this,'monthly')">15<sup>th</sup></button>
+          <button type="button" class="chip" data-val="16" onclick="toggleChip(this,'monthly')">16<sup>th</sup></button>
+          <button type="button" class="chip" data-val="17" onclick="toggleChip(this,'monthly')">17<sup>th</sup></button>
+          <button type="button" class="chip" data-val="18" onclick="toggleChip(this,'monthly')">18<sup>th</sup></button>
+          <button type="button" class="chip" data-val="19" onclick="toggleChip(this,'monthly')">19<sup>th</sup></button>
+          <button type="button" class="chip" data-val="20" onclick="toggleChip(this,'monthly')">20<sup>th</sup></button>
+          <button type="button" class="chip" data-val="21" onclick="toggleChip(this,'monthly')">21<sup>th</sup></button>
+          <button type="button" class="chip" data-val="22" onclick="toggleChip(this,'monthly')">22<sup>th</sup></button>
+          <button type="button" class="chip" data-val="23" onclick="toggleChip(this,'monthly')">23<sup>th</sup></button>
+          <button type="button" class="chip" data-val="24" onclick="toggleChip(this,'monthly')">24<sup>th</sup></button>
+          <button type="button" class="chip" data-val="25" onclick="toggleChip(this,'monthly')">25<sup>th</sup></button>
+          <button type="button" class="chip" data-val="26" onclick="toggleChip(this,'monthly')">26<sup>th</sup></button>
+          <button type="button" class="chip" data-val="27" onclick="toggleChip(this,'monthly')">27<sup>th</sup></button>
+          <button type="button" class="chip" data-val="28" onclick="toggleChip(this,'monthly')">28<sup>th</sup></button>
+          
+        </div>
       </div>
 
       <!-- Star -->
